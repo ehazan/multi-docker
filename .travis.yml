@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t ehazan/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run ehazan/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t ehazan/multi-client ./client
+  - docker build -t ehazan/multi-nginx ./nginx
+  - docker build -t ehazan/multi-server ./server
+  - docker build -t ehazan/multi-worker ./worker
+  # log in to the docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin 
+  # push the images above to docker-hub
+  - docker push ehazan/multi-client
+  - docker push ehazan/multi-nginx
+  - docker push ehazan/multi-server
+  - docker push ehazan/multi-worker
